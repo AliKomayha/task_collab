@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
 
-const String _baseUrl='taskcollab.000webhostapp.com';
+//const String _baseUrl='http://192.168.1.118:8001';
+const String _baseUrl = '192.168.1.118:8001';
 
 class Task{
    int _tid;
@@ -11,6 +12,8 @@ class Task{
    String _content;
    String _duedate;
    String _status;
+
+   int get taskId => _tid;
 
    Task(this._tid, this._mname, this._content, this._duedate,
       this._status);
@@ -29,10 +32,16 @@ List <Task> _tasks =[];
 
 
 /// update tasks
-void updateTasks(Function(bool success) update, String username) async {
+void updateTasks(Function(bool success) update, String userId) async {
   try {
-    final url = Uri.https(_baseUrl, 'getTasks.php', {'username': '$username'});
-    final response = await http.get(url).timeout(const Duration(seconds: 5));
+    //final url = Uri.https(_baseUrl, 'getTasks.php', {'username': '$username'});
+    final url = Uri.parse('$_baseUrl/api/employee-tasks');
+    //final response = await http.get(url).timeout(const Duration(seconds: 5));
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: convert.jsonEncode({'id': userId}),  // Send the user ID in the body
+    ).timeout(const Duration(seconds: 5));
 
     _tasks.clear();
 
@@ -72,22 +81,40 @@ void updateTasks(Function(bool success) update, String username) async {
   }
 }
 /// //
-Future<void> doneTask(int tid) async {
+// Future<void> doneTask(int tid) async {
+//   try {
+
+//     final response = await http.post(
+//         Uri.https(_baseUrl,'doneTask.php'),
+//         headers: <String, String>{
+//         'Content-Type': 'application/json; charset=UTF-8',
+//           },
+//         body: convert.jsonEncode(<String, String>{
+//         'tid': '$tid'
+//         })).timeout(const Duration(seconds: 5));
+
+//         }catch(e){
+
+//   }
+
+// }
+Future<void> doneTask(int taskId) async {
   try {
-
+    final url = Uri.parse('$_baseUrl/api/complete-task');  // Assuming a new endpoint for marking task complete
     final response = await http.post(
-        Uri.https(_baseUrl,'doneTask.php'),
-        headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-          },
-        body: convert.jsonEncode(<String, String>{
-        'tid': '$tid'
-        })).timeout(const Duration(seconds: 5));
+      url,
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: convert.jsonEncode({'task_id': taskId.toString()}),
+    ).timeout(const Duration(seconds: 5));
 
-        }catch(e){
-
+    if (response.statusCode == 200) {
+      print("Task marked as done successfully");
+    } else {
+      print("Failed to mark task as done, status code: ${response.statusCode}");
+    }
+  } catch (e) {
+    print("Error while marking task as done: $e");
   }
-
 }
 
 /// Show tasks

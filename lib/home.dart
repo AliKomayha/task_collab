@@ -5,7 +5,9 @@ import 'package:encrypted_shared_preferences/encrypted_shared_preferences.dart';
 import 'employeeDashboard.dart';
 import 'managerDashboard.dart';
 
-const String _baseUrl='taskcollab.000webhostapp.com';
+//const String _baseUrl='taskcollab.000webhostapp.com';
+//const String _baseUrl='http://192.168.1.118:8001';
+const String _baseUrl = '192.168.1.118:8001';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -49,7 +51,50 @@ class _HomeState extends State<Home> {
   }
 
 
-  Future<void> checkLogin() async {
+  // Future<void> checkLogin() async {
+  //   final username = _controllerUsername.text.trim();
+  //   final password = _controllerPassword.text.trim();
+
+  //   if (username.isEmpty || password.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Username and password are required')),
+  //     );
+  //   } else {
+  //     // Assume your authentication API endpoint is "/login"
+  //     //final url = Uri.parse("https://your-api-url.com/login");
+
+  //     final url = Uri.https(_baseUrl, 'login.php');
+  //     print('Request Body: ${json.encode({'username': username, 'password': password})}');
+  //     final response = await http.post(
+  //       url,
+  //       body: {'username': username, 'password': password},
+
+  //     );
+  //     print('Response Code: ${response.statusCode}');
+  //     print('Response Body: ${response.body}');
+
+  //     if (response.statusCode == 200) {
+  //       final responseData = json.decode(response.body);
+
+  //       if (responseData['success']) {
+  //         //_encryptedData.setString('myKey', username);
+  //         // _encryptedData.setString('userRole', responseData['role']);
+  //         String role = responseData['data'][0]['role'];
+  //         update(success: true, role: role);
+  //         //update(true);
+  //       } else {
+  //         update(success: false);
+  //       }
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Failed to connect to the server')),
+  //       );
+  //     }
+  //   }
+  // }
+
+  Future<void> checkLogin() async 
+  {
     final username = _controllerUsername.text.trim();
     final password = _controllerPassword.text.trim();
 
@@ -58,38 +103,42 @@ class _HomeState extends State<Home> {
         const SnackBar(content: Text('Username and password are required')),
       );
     } else {
-      // Assume your authentication API endpoint is "/login"
-      //final url = Uri.parse("https://your-api-url.com/login");
+      final url = Uri.http(_baseUrl, '/api/login');
+      
+      try {
+        final response = await http.post(
+          url,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'username': username,
+            'password': password,
+          }),
+        );
 
-      final url = Uri.https(_baseUrl, 'login.php');
-      print('Request Body: ${json.encode({'username': username, 'password': password})}');
-      final response = await http.post(
-        url,
-        body: {'username': username, 'password': password},
+        if (response.statusCode == 200) {
+          final responseData = json.decode(response.body);
 
-      );
-      print('Response Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-
-        if (responseData['success']) {
-          //_encryptedData.setString('myKey', username);
-          // _encryptedData.setString('userRole', responseData['role']);
-          String role = responseData['data'][0]['role'];
-          update(success: true, role: role);
-          //update(true);
+          if (responseData['success']) {
+            String role = responseData['data']['role'];
+            update(success: true, role: role);
+          } else {
+            update(success: false); // Invalid credentials
+          }
         } else {
-          update(success: false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to connect to the server')),
+          );
         }
-      } else {
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to connect to the server')),
+          const SnackBar(content: Text('Error connecting to server')),
         );
       }
     }
   }
+
 
   void checkSavedData() async {
     final myKey = await _encryptedData.getString('myKey');
@@ -142,7 +191,7 @@ class _HomeState extends State<Home> {
             SizedBox(width: 200,
               child: TextFormField(
                 controller: _controllerPassword,
-
+                obscureText: true,
                 decoration: const InputDecoration(
 
                   border: OutlineInputBorder(),

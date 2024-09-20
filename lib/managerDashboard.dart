@@ -4,7 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
-const String _baseUrl='taskcollab.000webhostapp.com';
+//const String _baseUrl='http://192.168.1.118:8001';
+const String _baseUrl = '192.168.1.118:8001';
 
 EncryptedSharedPreferences _encryptedData= EncryptedSharedPreferences();
 
